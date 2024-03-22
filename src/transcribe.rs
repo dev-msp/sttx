@@ -34,10 +34,17 @@ fn format_ms_timestamp(total_ms: u32) -> String {
 }
 
 impl Timing {
+    #[allow(dead_code)]
     pub fn start(&self) -> u32 {
         self.start
     }
 
+    #[allow(dead_code)]
+    pub fn end(&self) -> u32 {
+        self.end
+    }
+
+    #[allow(dead_code)]
     pub fn duration(&self) -> u32 {
         self.end - self.start
     }
