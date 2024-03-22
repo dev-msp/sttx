@@ -21,6 +21,6 @@ fn main() {
         .duration_windows(Duration::from_secs(10));
 
     for t in timings {
-        println!("\nstart: {}, content:\n{}", t.start(), t.content());
+        println!("{}", t);
     }
 }

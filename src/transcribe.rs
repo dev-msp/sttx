@@ -9,6 +9,30 @@ pub struct Timing {
     text: String,
 }
 
+impl std::fmt::Display for Timing {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} - {}\n{}",
+            format_ms_timestamp(self.start),
+            format_ms_timestamp(self.end),
+            self.content()
+        )
+    }
+}
+
+fn format_ms_timestamp(total_ms: u32) -> String {
+    let ms = total_ms % 1000;
+    let s = total_ms / 1000;
+    let m = s / 60;
+    let h = m / 60;
+
+    if h == 0 {
+        return format!("{:02}:{:02}.{:02}", m, s % 60, ms / 10);
+    }
+    format!("{:02}:{:02}:{:02}.{:02}", h, m % 60, s % 60, ms / 10)
+}
+
 impl Timing {
     pub fn start(&self) -> u32 {
         self.start
