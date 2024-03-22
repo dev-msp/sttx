@@ -15,7 +15,7 @@ fn main() {
     let mut rdr = csv::Reader::from_reader(vendor::BadCsvReader::new(file));
     let timings = rdr
         .deserialize()
-        .filter_map(|r: TxResult| r.ok())
+        .map(|r: TxResult| r.expect("no malformed CSV records"))
         .join_continuations()
         .sentences()
         .duration_windows(Duration::from_secs(10));
