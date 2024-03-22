@@ -106,6 +106,56 @@ pub trait TxbIter: Sized + Iterator<Item = Timing> {
         })
     }
 
+    fn max_silence(self, max_silence: Duration) -> impl Iterator<Item = Self::Item> {
+        self.peekable().batching(move |it| {
+            let mut acc = it.next()?;
+            let mut total_silence = 0;
+
+            while it.peek().map_or(false, |next| {
+                total_silence + next.start - acc.end < max_silence.as_millis() as u32
+            }) {
+                let Some(next) = it.next() else {
+                    return Some(acc);
+                };
+
+                total_silence += next.start - acc.end;
+
+                acc = acc.combine(&next);
+            }
+            Some(acc)
+        })
+    }
+
+    fn min_word_count(self, min_words: usize) -> impl Iterator<Item = Self::Item> {
+        self.batching(move |it| {
+            let mut acc = it.next()?;
+            while acc.text.split_whitespace().count() < min_words {
+                let Some(next) = it.next() else {
+                    return Some(acc);
+                };
+
+                acc = acc.combine(&next);
+            }
+            Some(acc)
+        })
+    }
+
+    fn by_gap(self, gap_size: Duration) -> impl Iterator<Item = Self::Item> {
+        self.peekable().batching(move |it| {
+            let mut acc = it.next()?;
+            while it.peek().map_or(false, |next| {
+                next.start - acc.end < gap_size.as_millis() as u32
+            }) {
+                let Some(next) = it.next() else {
+                    return Some(acc);
+                };
+
+                acc = acc.combine(&next);
+            }
+            Some(acc)
+        })
+    }
+
     fn lasting(self, window_size: Duration) -> impl Iterator<Item = Self::Item> {
         self.batching(move |it| {
             let mut acc = it.next()?;
