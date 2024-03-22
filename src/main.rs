@@ -22,8 +22,8 @@ fn main() {
     let timings = rdr
         .deserialize()
         .filter_map(|r: TxResult| r.ok())
-        .fold_punctuation()
-        .duration_windows(Duration::from_secs(60));
+        .join_continuations()
+        .duration_windows(Duration::from_secs(10));
 
     for t in timings {
         println!("\nstart: {}, content:\n{}", t.start(), t.content());

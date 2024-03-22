@@ -36,7 +36,7 @@ impl Timing {
 }
 
 pub trait TxbIter: Sized + Iterator<Item = Timing> {
-    fn fold_punctuation(self) -> impl Iterator<Item = Self::Item> {
+    fn join_continuations(self) -> impl Iterator<Item = Self::Item> {
         self.peekable().batching(move |it| {
             let mut acc = it.next()?;
             if it.peek().is_some_and(Timing::is_continuation) {
