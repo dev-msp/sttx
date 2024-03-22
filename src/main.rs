@@ -18,7 +18,7 @@ fn main() {
         .map(|r: TxResult| r.expect("no malformed CSV records"))
         .join_continuations()
         .sentences()
-        .duration_windows(Duration::from_secs(10));
+        .lasting(Duration::from_secs(10));
 
     for t in timings {
         println!("{}", t);

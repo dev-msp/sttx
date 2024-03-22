@@ -106,7 +106,7 @@ pub trait TxbIter: Sized + Iterator<Item = Timing> {
         })
     }
 
-    fn duration_windows(self, window_size: Duration) -> impl Iterator<Item = Self::Item> {
+    fn lasting(self, window_size: Duration) -> impl Iterator<Item = Self::Item> {
         self.batching(move |it| {
             let mut acc = it.next()?;
             while acc.duration() < window_size.as_millis() as u32 {
