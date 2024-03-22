@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use itertools::Itertools;
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Timing {
     start: u32,
     end: u32,
@@ -118,6 +118,14 @@ pub trait TxbIter: Sized + Iterator<Item = Timing> {
             }
             Some(acc)
         })
+    }
+
+    fn to_csv<W: std::io::Write>(self, w: W) -> csv::Result<()> {
+        let mut wtr = csv::Writer::from_writer(w);
+        for t in self {
+            wtr.serialize(t)?;
+        }
+        Ok(wtr.flush()?)
     }
 }
 
