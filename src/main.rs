@@ -17,6 +17,7 @@ fn main() {
         .deserialize()
         .filter_map(|r: TxResult| r.ok())
         .join_continuations()
+        .sentences()
         .duration_windows(Duration::from_secs(10));
 
     for t in timings {

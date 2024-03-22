@@ -49,6 +49,30 @@ pub trait TxbIter: Sized + Iterator<Item = Timing> {
             Some(acc)
         })
     }
+
+    fn sentences(self) -> impl Iterator<Item = Self::Item> {
+        #[inline]
+        fn is_sentence(s: &str) -> bool {
+            s.chars()
+                .enumerate()
+                .last()
+                .map_or(false, |(i, c)| i > 0 && matches!(c, '.' | '!' | '?'))
+        }
+
+        self.batching(move |it| {
+            let mut acc = it.next()?;
+
+            while !is_sentence(&acc.text) {
+                let Some(next) = it.next() else {
+                    return Some(acc);
+                };
+
+                acc = acc.combine(&next);
+            }
+            Some(acc)
+        })
+    }
+
     fn duration_windows(self, window_size: Duration) -> impl Iterator<Item = Self::Item> {
         self.batching(move |it| {
             let mut acc = it.next()?;
