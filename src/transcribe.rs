@@ -54,6 +54,15 @@ impl Timing {
         }
     }
 
+    /// Like combine, but does not change the timing
+    pub fn absorb(&self, other: &Self) -> Self {
+        Self {
+            start: self.start,
+            end: self.end,
+            text: format!("{}{}", self.text, other.text),
+        }
+    }
+
     fn is_continuation(&self) -> bool {
         !self.text.chars().next().is_some_and(char::is_whitespace)
     }
@@ -61,14 +70,14 @@ impl Timing {
 
 pub trait TxbIter: Sized + Iterator<Item = Timing> {
     fn join_continuations(self) -> impl Iterator<Item = Self::Item> {
-        self.peekable().batching(move |it| {
+        self.peekable().batching(|it| {
             let mut acc = it.next()?;
             if it.peek().is_some_and(Timing::is_continuation) {
                 let Some(next) = it.next() else {
                     return Some(acc);
                 };
 
-                acc = acc.combine(&next);
+                acc = acc.absorb(&next);
             }
             Some(acc)
         })
