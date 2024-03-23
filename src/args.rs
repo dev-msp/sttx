@@ -8,28 +8,53 @@ use clap::{
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 pub struct App {
+    #[arg(short = 'f', long = "format", default_value = "pretty", value_parser = OutputKind::parse)]
+    output_type: OutputKind,
+
+    #[arg(short = 'o',  long = "output", default_value = "-", value_parser = OutputSink::parse)]
+    output_sink: OutputSink,
+
+    #[arg(value_parser = InputSource::parse)]
+    input: InputSource,
+
+    /// Concatenates speech events, stopping when the accumulated delay between events exceeds the
+    /// given duration.
     #[arg(long, value_parser = ParseDuration)]
     max_silence: Option<Duration>,
 
+    /// Concatenates speech events, stopping at the next sentence ending ('.', '!', or '?')
     #[arg(short, long, default_value = "false")]
     sentences: bool,
 
+    /// Concatenates speech events, stopping when the total word count of the result exceeds the
+    /// given value.
     #[arg(short = 'w', long)]
     min_word_count: Option<usize>,
 
+    /// Concatenates speech events, stopping when the delay until the start of the next events
     #[arg(short = 'g', long, value_parser = ParseDuration)]
     by_gap: Option<Duration>,
 
+    /// Concatenates speech events, stopping when the total duration of the result exceeds the
+    /// given value.
     #[arg(short, long, value_parser = ParseDuration)]
     lasting: Option<Duration>,
+}
 
-    #[arg(short, long, default_value = "pretty", value_parser = OutputKind::parse)]
-    output: OutputKind,
+#[derive(Debug, Clone)]
+pub enum InputSource {
+    Stdin,
+    File(String),
+}
 
-    path: String,
-
-    #[arg(default_value = "-", value_parser = OutputSink::parse)]
-    output_sink: OutputSink,
+impl InputSource {
+    fn parse(s: &str) -> Result<Self, String> {
+        if s == "-" {
+            Ok(Self::Stdin)
+        } else {
+            Ok(Self::File(s.to_string()))
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -66,8 +91,8 @@ impl OutputSink {
 
 #[allow(dead_code)]
 impl App {
-    pub fn path(&self) -> &str {
-        &self.path
+    pub fn input(&self) -> &InputSource {
+        &self.input
     }
 
     pub fn max_silence(&self) -> Option<Duration> {
@@ -91,7 +116,15 @@ impl App {
     }
 
     pub fn output(&self) -> OutputKind {
-        self.output.clone()
+        self.output_type.clone()
+    }
+
+    pub fn source(&self) -> std::io::Result<Box<dyn std::io::Read>> {
+        let reader: Box<dyn std::io::Read> = match self.input {
+            InputSource::Stdin => Box::new(std::io::stdin()),
+            InputSource::File(ref path) => Box::new(std::fs::File::open(path)?),
+        };
+        Ok(reader)
     }
 
     pub fn sink(&self) -> std::io::Result<Box<dyn std::io::Write>> {

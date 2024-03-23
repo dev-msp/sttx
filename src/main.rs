@@ -9,16 +9,10 @@ use crate::transcribe::IteratorExt;
 
 type TxResult = Result<transcribe::Timing, csv::Error>;
 
-impl App {
-    fn read_file(&self) -> std::fs::File {
-        std::fs::File::open(self.path()).unwrap()
-    }
-}
-
 fn main() {
     let app = App::parse();
 
-    let file = app.read_file();
+    let file = app.source().unwrap();
 
     let mut rdr = csv::Reader::from_reader(vendor::BadCsvReader::new(file));
     let mut timings = rdr
