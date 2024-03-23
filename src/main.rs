@@ -3,7 +3,7 @@ mod vendor;
 
 use std::time::Duration;
 
-use crate::transcribe::TxbIter;
+use crate::transcribe::IteratorExt;
 
 type TxResult = Result<transcribe::Timing, csv::Error>;
 

@@ -75,30 +75,40 @@ impl Timing {
     }
 }
 
-pub trait TxbIter: Sized + Iterator<Item = Timing> {
-    fn join_continuations(self) -> impl Iterator<Item = Self::Item> {
-        self.peekable().batching(|it| {
-            let mut acc = it.next()?;
-            if it.peek().is_some_and(Timing::is_continuation) {
-                let Some(next) = it.next() else {
-                    return Some(acc);
-                };
+pub struct Iter<I>
+where
+    I: Iterator<Item = Timing>,
+{
+    inner: I,
+}
 
-                acc = acc.absorb(&next);
-            }
-            Some(acc)
-        })
+impl<'a, I> Iterator for Iter<I>
+where
+    I: Iterator<Item = Timing> + 'a,
+{
+    type Item = Timing;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
     }
+}
 
-    fn sentences(self) -> impl Iterator<Item = Self::Item> {
-        #[inline]
-        fn is_sentence(s: &str) -> bool {
-            s.chars()
-                .enumerate()
-                .last()
-                .map_or(false, |(i, c)| i > 0 && matches!(c, '.' | '!' | '?'))
-        }
+type IterDyn<'a> = Iter<Box<dyn Iterator<Item = Timing> + 'a>>;
 
+#[inline]
+fn is_sentence(s: &str) -> bool {
+    s.chars()
+        .enumerate()
+        .last()
+        .map_or(false, |(i, c)| i > 0 && matches!(c, '.' | '!' | '?'))
+}
+
+#[allow(dead_code)]
+impl<'a, I> Iter<I>
+where
+    I: Iterator<Item = Timing> + 'a,
+{
+    pub fn sentences(self) -> IterDyn<'a> {
         self.batching(move |it| {
             let mut acc = it.next()?;
 
@@ -111,29 +121,32 @@ pub trait TxbIter: Sized + Iterator<Item = Timing> {
             }
             Some(acc)
         })
+        .boxed()
     }
 
-    fn max_silence(self, max_silence: Duration) -> impl Iterator<Item = Self::Item> {
-        self.peekable().batching(move |it| {
-            let mut acc = it.next()?;
-            let mut total_silence = 0;
+    pub fn max_silence(self, max_silence: Duration) -> IterDyn<'a> {
+        self.peekable()
+            .batching(move |it| {
+                let mut acc = it.next()?;
+                let mut total_silence = 0;
 
-            while it.peek().map_or(false, |next| {
-                total_silence + next.start - acc.end < max_silence.as_millis() as u32
-            }) {
-                let Some(next) = it.next() else {
-                    return Some(acc);
-                };
+                while it.peek().map_or(false, |next| {
+                    total_silence + next.start - acc.end < max_silence.as_millis() as u32
+                }) {
+                    let Some(next) = it.next() else {
+                        return Some(acc);
+                    };
 
-                total_silence += next.start - acc.end;
+                    total_silence += next.start - acc.end;
 
-                acc = acc.combine(&next);
-            }
-            Some(acc)
-        })
+                    acc = acc.combine(&next);
+                }
+                Some(acc)
+            })
+            .boxed()
     }
 
-    fn min_word_count(self, min_words: usize) -> impl Iterator<Item = Self::Item> {
+    pub fn min_word_count(self, min_words: usize) -> IterDyn<'a> {
         self.batching(move |it| {
             let mut acc = it.next()?;
             while acc.text.split_whitespace().count() < min_words {
@@ -145,25 +158,28 @@ pub trait TxbIter: Sized + Iterator<Item = Timing> {
             }
             Some(acc)
         })
+        .boxed()
     }
 
-    fn by_gap(self, gap_size: Duration) -> impl Iterator<Item = Self::Item> {
-        self.peekable().batching(move |it| {
-            let mut acc = it.next()?;
-            while it.peek().map_or(false, |next| {
-                next.start - acc.end < gap_size.as_millis() as u32
-            }) {
-                let Some(next) = it.next() else {
-                    return Some(acc);
-                };
+    pub fn by_gap(self, gap_size: Duration) -> IterDyn<'a> {
+        self.peekable()
+            .batching(move |it| {
+                let mut acc = it.next()?;
+                while it.peek().map_or(false, |next| {
+                    next.start - acc.end < gap_size.as_millis() as u32
+                }) {
+                    let Some(next) = it.next() else {
+                        return Some(acc);
+                    };
 
-                acc = acc.combine(&next);
-            }
-            Some(acc)
-        })
+                    acc = acc.combine(&next);
+                }
+                Some(acc)
+            })
+            .boxed()
     }
 
-    fn lasting(self, window_size: Duration) -> impl Iterator<Item = Self::Item> {
+    pub fn lasting(self, window_size: Duration) -> IterDyn<'a> {
         self.batching(move |it| {
             let mut acc = it.next()?;
             while acc.duration() < window_size.as_millis() as u32 {
@@ -175,9 +191,10 @@ pub trait TxbIter: Sized + Iterator<Item = Timing> {
             }
             Some(acc)
         })
+        .boxed()
     }
 
-    fn to_csv<W: std::io::Write>(self, w: W) -> csv::Result<()> {
+    pub fn write_csv<W: std::io::Write>(self, w: W) -> csv::Result<()> {
         let mut wtr = csv::Writer::from_writer(w);
         for t in self {
             wtr.serialize(t)?;
@@ -186,4 +203,31 @@ pub trait TxbIter: Sized + Iterator<Item = Timing> {
     }
 }
 
-impl<I: Iterator<Item = Timing>> TxbIter for I {}
+pub trait IteratorExt<'a>: Sized + Iterator<Item = Timing>
+where
+    Self: 'a,
+{
+    fn join_continuations(self) -> IterDyn<'a> {
+        self.peekable()
+            .batching(|it| {
+                let mut acc = it.next()?;
+                if it.peek().is_some_and(Timing::is_continuation) {
+                    let Some(next) = it.next() else {
+                        return Some(acc);
+                    };
+
+                    acc = acc.absorb(&next);
+                }
+                Some(acc)
+            })
+            .boxed()
+    }
+
+    fn boxed(self) -> IterDyn<'a> {
+        Iter {
+            inner: Box::new(self),
+        }
+    }
+}
+
+impl<'a, I: Iterator<Item = Timing> + 'a> IteratorExt<'a> for I {}
