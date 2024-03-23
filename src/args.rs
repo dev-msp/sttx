@@ -8,11 +8,14 @@ use clap::{
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 pub struct App {
-    #[arg(short = 'f', long = "format", default_value = "pretty", value_parser = OutputKind::parse)]
-    output_type: OutputKind,
+    #[arg(short = 'f', long = "format", default_value = "pretty", value_parser = OutputFormat::parse)]
+    output_type: OutputFormat,
 
     #[arg(short = 'o',  long = "output", default_value = "-", value_parser = OutputSink::parse)]
     output_sink: OutputSink,
+
+    #[arg(short = 'i', long = "input-format", default_value = "csv", value_parser = InputFormat::parse)]
+    input_format: InputFormat,
 
     #[arg(value_parser = InputSource::parse)]
     input: InputSource,
@@ -42,6 +45,22 @@ pub struct App {
 }
 
 #[derive(Debug, Clone)]
+pub enum InputFormat {
+    Csv,
+    Json,
+}
+
+impl InputFormat {
+    fn parse(s: &str) -> Result<Self, String> {
+        match s {
+            "csv" => Ok(Self::Csv),
+            "json" => Ok(Self::Json),
+            _ => Err("invalid input format".to_string()),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum InputSource {
     Stdin,
     File(String),
@@ -58,17 +77,19 @@ impl InputSource {
 }
 
 #[derive(Debug, Clone)]
-pub enum OutputKind {
+pub enum OutputFormat {
     Csv,
+    Json,
     Pretty,
 }
 
-impl OutputKind {
+impl OutputFormat {
     fn parse(s: &str) -> Result<Self, String> {
         match s {
             "csv" => Ok(Self::Csv),
+            "json" => Ok(Self::Json),
             "pretty" => Ok(Self::Pretty),
-            _ => Err("invalid output kind".to_string()),
+            _ => Err("invalid output format".to_string()),
         }
     }
 }
@@ -115,7 +136,7 @@ impl App {
         self.sentences
     }
 
-    pub fn output(&self) -> OutputKind {
+    pub fn output(&self) -> OutputFormat {
         self.output_type.clone()
     }
 

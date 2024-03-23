@@ -201,6 +201,10 @@ where
         }
         Ok(wtr.flush()?)
     }
+
+    pub fn write_json<W: std::io::Write>(self, w: W) -> serde_json::Result<()> {
+        serde_json::to_writer(w, &self.collect::<Vec<_>>())
+    }
 }
 
 pub trait IteratorExt<'a>: Sized + Iterator<Item = Timing>

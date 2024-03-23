@@ -12,12 +12,19 @@ type TxResult = Result<transcribe::Timing, csv::Error>;
 #[derive(Debug)]
 enum Error {
     Csv(csv::Error),
+    Json(serde_json::Error),
     Io(std::io::Error),
 }
 
 impl From<csv::Error> for Error {
     fn from(e: csv::Error) -> Self {
         Self::Csv(e)
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Self::Json(e)
     }
 }
 
@@ -31,6 +38,7 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Csv(e) => write!(f, "CSV error: {}", e),
+            Self::Json(e) => write!(f, "JSON error: {}", e),
             Self::Io(e) => write!(f, "I/O error: {}", e),
         }
     }
@@ -68,8 +76,11 @@ impl App {
 
         let mut s = self.sink().unwrap();
         match self.output() {
-            args::OutputKind::Csv => timings.write_csv(s)?,
-            args::OutputKind::Pretty => {
+            args::OutputFormat::Csv => timings.write_csv(s)?,
+            args::OutputFormat::Json => {
+                timings.write_json(s)?;
+            }
+            args::OutputFormat::Pretty => {
                 for t in timings {
                     writeln!(s, "{}\n", t)?;
                 }
