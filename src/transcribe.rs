@@ -13,24 +13,35 @@ impl std::fmt::Display for Timing {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{} - {}\n{}",
-            format_ms_timestamp(self.start),
-            format_ms_timestamp(self.end),
+            "{} - {} ({})\n{}",
+            format_clock_value(self.start, None),
+            format_clock_value(self.end, None),
+            format_clock_value(self.duration(), Some(ClockScale::Seconds)),
             self.content()
         )
     }
 }
 
-fn format_ms_timestamp(total_ms: u32) -> String {
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum ClockScale {
+    Seconds,
+    Minutes,
+    Hours,
+}
+
+fn format_clock_value(total_ms: u32, min_clock_scale: Option<ClockScale>) -> String {
+    let min_clock_scale = min_clock_scale.unwrap_or(ClockScale::Minutes);
     let ms = total_ms % 1000;
     let s = total_ms / 1000;
     let m = s / 60;
     let h = m / 60;
 
-    if h == 0 {
-        return format!("{:02}:{:02}.{:02}", m, s % 60, ms / 10);
+    match min_clock_scale {
+        ClockScale::Hours => format!("{}:{:02}:{:02}.{:02}", h, m % 60, s % 60, ms / 10),
+        ClockScale::Minutes => format!("{}:{:02}.{:02}", m, s % 60, ms / 10),
+        ClockScale::Seconds => format!("{}.{:02}s", s, ms / 10),
     }
-    format!("{:02}:{:02}:{:02}.{:02}", h, m % 60, s % 60, ms / 10)
 }
 
 impl Timing {
