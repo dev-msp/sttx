@@ -233,6 +233,8 @@ where
     }
 }
 
+const MAX_DURATION: Duration = Duration::from_millis(500);
+
 pub trait IteratorExt<'a>: Sized + Iterator<Item = Timing>
 where
     Self: 'a,
@@ -240,8 +242,10 @@ where
     fn join_continuations(self) -> IterDyn<'a> {
         self.peekable()
             .batching(|it| {
+                // We're consuming at least one event
                 let mut acc = it.next()?;
-                if it.peek().is_some_and(Timing::is_continuation) {
+
+                while it.peek().is_some_and(Timing::is_continuation) {
                     let Some(next) = it.next() else {
                         return Some(acc);
                     };
@@ -249,6 +253,13 @@ where
                     acc = acc.absorb(&next);
                 }
                 Some(acc)
+            })
+            .map(move |mut t| {
+                // limit duration of each "utterance" to something reasonable
+                if t.duration() > MAX_DURATION.as_millis() as u32 {
+                    t.end = t.start + MAX_DURATION.as_millis() as u32;
+                }
+                t
             })
             .boxed()
     }
