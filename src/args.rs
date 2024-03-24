@@ -20,30 +20,27 @@ pub struct App {
     #[arg(value_parser = InputSource::parse)]
     input: InputSource,
 
-    /// Concatenates speech events, stopping when the accumulated delay between events exceeds the
-    /// given duration.
+    /// Concatenates until the accumulated delay between events exceeds the given duration.
     #[arg(long, value_parser = ParseDuration)]
     max_silence: Option<Duration>,
 
-    /// Concatenates speech events, stopping at the next sentence ending ('.', '!', or '?')
+    /// Concatenates up to the next sentence ending ('.', '!', or '?')
     #[arg(short, long, default_value = "false")]
     sentences: bool,
 
-    /// Concatenates speech events, stopping when the total word count of the result exceeds the
-    /// given value.
+    /// Concatenates until the total word count of the result exceeds the given value.
     #[arg(short = 'w', long)]
     min_word_count: Option<usize>,
 
-    /// Concatenates speech events, stopping when the delay until the start of the next events
+    /// Concatenates until the delay until the start of the next event exceeds the given duration.
     #[arg(short = 'g', long, value_parser = ParseDuration)]
     by_gap: Option<Duration>,
 
-    /// Concatenates speech events, stopping when the total duration of the result exceeds the
-    /// given value.
+    /// Concatenates until the total duration of the result exceeds the given value.
     #[arg(short, long, value_parser = ParseDuration)]
     lasting: Option<Duration>,
 
-    /// Concatenates speech events, stopping after N events.
+    /// Concatenates up to N events.
     #[arg(short, long)]
     chunk_size: Option<usize>,
 }
