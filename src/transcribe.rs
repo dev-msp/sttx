@@ -104,7 +104,7 @@ where
     }
 }
 
-type IterDyn<'a> = Iter<Box<dyn Iterator<Item = Timing> + 'a>>;
+pub type IterDyn<'a> = Iter<Box<dyn Iterator<Item = Timing> + 'a>>;
 
 #[inline]
 fn is_sentence(s: &str) -> bool {

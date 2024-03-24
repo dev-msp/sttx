@@ -2,8 +2,12 @@ mod args;
 mod transcribe;
 mod vendor;
 
+use std::{io::ErrorKind, process};
+
 use args::App;
 use clap::Parser;
+use itertools::Itertools;
+use transcribe::IterDyn;
 
 use crate::transcribe::IteratorExt;
 
@@ -45,7 +49,7 @@ impl std::fmt::Display for Error {
 }
 
 impl App {
-    fn transform_timings(&self) -> Result<(), Error> {
+    fn transform_timings(&self) -> IterDyn<'_> {
         let file = self.source().unwrap();
 
         let mut rdr = csv::Reader::from_reader(vendor::BadCsvReader::new(file));
@@ -78,19 +82,20 @@ impl App {
             timings = timings.chunks(chunk_count);
         }
 
+        timings.collect_vec().into_iter().boxed()
+    }
+
+    fn process_to_output(&self, timings: IterDyn<'_>) -> Result<(), Error> {
         let mut s = self.sink().unwrap();
         match self.output() {
             args::OutputFormat::Csv => timings.write_csv(s)?,
-            args::OutputFormat::Json => {
-                timings.write_json(s)?;
-            }
+            args::OutputFormat::Json => timings.write_json(s)?,
             args::OutputFormat::Pretty => {
                 for t in timings {
                     writeln!(s, "{}\n", t)?;
                 }
             }
-        }
-
+        };
         Ok(())
     }
 }
@@ -98,5 +103,12 @@ impl App {
 fn main() {
     let app = App::parse();
 
-    app.transform_timings().unwrap();
+    let timings = app.transform_timings();
+
+    match app.process_to_output(timings) {
+        Err(Error::Io(e)) if e.kind() == ErrorKind::BrokenPipe => {
+            process::exit(0);
+        }
+        _ => {}
+    }
 }
