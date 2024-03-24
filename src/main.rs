@@ -74,6 +74,10 @@ impl App {
             timings = timings.lasting(window);
         }
 
+        if let Some(chunk_count) = self.chunk_size() {
+            timings = timings.chunks(chunk_count);
+        }
+
         let mut s = self.sink().unwrap();
         match self.output() {
             args::OutputFormat::Csv => timings.write_csv(s)?,

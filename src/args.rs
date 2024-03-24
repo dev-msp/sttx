@@ -42,6 +42,10 @@ pub struct App {
     /// given value.
     #[arg(short, long, value_parser = ParseDuration)]
     lasting: Option<Duration>,
+
+    /// Concatenates speech events, stopping after N events.
+    #[arg(short, long)]
+    chunk_size: Option<usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -130,6 +134,10 @@ impl App {
 
     pub fn lasting(&self) -> Option<Duration> {
         self.lasting
+    }
+
+    pub fn chunk_size(&self) -> Option<usize> {
+        self.chunk_size
     }
 
     pub fn sentences(&self) -> bool {

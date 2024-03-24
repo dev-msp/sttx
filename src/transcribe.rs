@@ -205,6 +205,21 @@ where
         .boxed()
     }
 
+    pub fn chunks(self, chunk_count: usize) -> IterDyn<'a> {
+        self.batching(move |it| {
+            let mut acc = it.next()?;
+            for _ in 1..chunk_count {
+                let Some(next) = it.next() else {
+                    return Some(acc);
+                };
+
+                acc = acc.combine(&next);
+            }
+            Some(acc)
+        })
+        .boxed()
+    }
+
     pub fn write_csv<W: std::io::Write>(self, w: W) -> csv::Result<()> {
         let mut wtr = csv::Writer::from_writer(w);
         for t in self {
