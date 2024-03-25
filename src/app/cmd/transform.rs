@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{io, time::Duration};
 
 use clap::Args;
 
@@ -21,7 +21,7 @@ pub struct Transform {
 }
 
 impl Transform {
-    pub fn read_data(&self) -> Result<IterDyn<'_>, std::io::Error> {
+    pub fn read_data(&self) -> Result<IterDyn<'_>, io::Error> {
         use crate::transcribe::IteratorExt;
 
         let source = self.input.source()?;

@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{io, time::Duration};
 
 use itertools::Itertools;
 
@@ -229,7 +229,7 @@ where
         .boxed()
     }
 
-    pub fn write_csv<W: std::io::Write>(self, w: W) -> csv::Result<()> {
+    pub fn write_csv<W: io::Write>(self, w: W) -> csv::Result<()> {
         let mut wtr = csv::Writer::from_writer(w);
         for t in self {
             wtr.serialize(t)?;
@@ -237,11 +237,11 @@ where
         Ok(wtr.flush()?)
     }
 
-    pub fn write_json<W: std::io::Write>(self, w: W) -> serde_json::Result<()> {
+    pub fn write_json<W: io::Write>(self, w: W) -> serde_json::Result<()> {
         serde_json::to_writer(w, &self.collect::<Vec<_>>())
     }
 
-    pub fn write_srt<W: std::io::Write>(self, mut w: W) -> std::io::Result<()> {
+    pub fn write_srt<W: io::Write>(self, mut w: W) -> io::Result<()> {
         let mut i = 1;
         for t in self {
             writeln!(w, "{}", i)?;

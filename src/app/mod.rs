@@ -4,6 +4,8 @@ pub(crate) mod output;
 
 use clap::Parser;
 
+use crate::{transcribe, vendor};
+
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 pub struct App {

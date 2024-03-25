@@ -1,5 +1,7 @@
 mod transform;
 
+use std::io;
+
 use clap::Subcommand;
 
 use super::{input, output};
@@ -8,7 +10,7 @@ use super::{input, output};
 pub enum Error {
     Csv(csv::Error),
     Json(serde_json::Error),
-    Io(std::io::Error),
+    Io(io::Error),
 }
 
 impl From<csv::Error> for Error {
@@ -23,8 +25,8 @@ impl From<serde_json::Error> for Error {
     }
 }
 
-impl From<std::io::Error> for Error {
-    fn from(e: std::io::Error) -> Self {
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Self {
         Self::Io(e)
     }
 }

@@ -8,10 +8,6 @@ use std::process;
 use app::App;
 use clap::Parser;
 
-type TxResult = Result<transcribe::Timing, csv::Error>;
-
-impl App {}
-
 fn main() {
     let app = App::parse();
 

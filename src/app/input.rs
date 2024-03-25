@@ -1,19 +1,15 @@
-use std::time::Duration;
+use std::{io, time::Duration};
 
-use clap::{
-    builder::PossibleValue,
-    error::{ContextKind, ContextValue, ErrorKind},
-    Args, Error, ValueEnum,
-};
 use itertools::Itertools;
 
-use crate::{
+use super::{
     transcribe::{IterDyn, IteratorExt, Timing},
     vendor::BadCsvReader,
-    TxResult,
 };
 
-#[derive(Args)]
+type TxResult = Result<Timing, csv::Error>;
+
+#[derive(clap::Args)]
 pub struct Input {
     #[arg(
         short = 'i',
@@ -29,9 +25,9 @@ pub struct Input {
 }
 
 impl Input {
-    pub fn source(&self) -> Result<Box<dyn std::io::Read>, std::io::Error> {
-        let reader: Box<dyn std::io::Read> = match self.source {
-            Source::Stdin => Box::new(std::io::stdin()),
+    pub fn source(&self) -> Result<Box<dyn io::Read>, io::Error> {
+        let reader: Box<dyn io::Read> = match self.source {
+            Source::Stdin => Box::new(io::stdin()),
             Source::File(ref path) => Box::new(std::fs::File::open(path)?),
         };
         Ok(reader)
@@ -59,7 +55,7 @@ impl Default for Format {
     }
 }
 
-impl ValueEnum for Format {
+impl clap::ValueEnum for Format {
     fn value_variants<'a>() -> &'a [Self] {
         &[
             Self::Csv(Some(CsvHandling::WhisperCppFix)),
@@ -68,7 +64,8 @@ impl ValueEnum for Format {
         ]
     }
 
-    fn to_possible_value(&self) -> Option<PossibleValue> {
+    fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
+        use clap::builder::PossibleValue;
         match self {
             Format::Csv(Some(CsvHandling::WhisperCppFix)) => Some(
                 PossibleValue::new("csv-fix").help("same as csv, plus whisper.cpp formatting fix"),
@@ -80,10 +77,10 @@ impl ValueEnum for Format {
 }
 
 impl Format {
-    pub fn consume_reader<'a, R: std::io::Read + 'a>(&self, reader: R) -> IterDyn<'a> {
+    pub fn consume_reader<'a, R: io::Read + 'a>(&self, reader: R) -> IterDyn<'a> {
         match self {
             Self::Csv(handling) => {
-                let mut csv_reader: csv::Reader<Box<dyn std::io::Read>> =
+                let mut csv_reader: csv::Reader<Box<dyn io::Read>> =
                     if let Some(CsvHandling::WhisperCppFix) = handling {
                         BadCsvReader::new(reader).into_csv_reader()
                     } else {
@@ -134,9 +131,10 @@ impl clap::builder::TypedValueParser for ParseDuration {
         arg: Option<&clap::Arg>,
         value: &std::ffi::OsStr,
     ) -> Result<Self::Value, clap::Error> {
+        use clap::error::{ContextKind, ContextValue, ErrorKind};
         let error = |kind: ErrorKind, msg: &str| -> clap::Error {
             let attribution = arg.map(|arg| format!(" for option '{}'", arg.get_id()));
-            let mut e = Error::new(kind);
+            let mut e = clap::Error::new(kind);
             e.insert(
                 ContextKind::Custom,
                 ContextValue::String(
