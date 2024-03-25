@@ -24,13 +24,13 @@ impl std::fmt::Display for Timing {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum ClockScale {
+pub enum ClockScale {
     Seconds,
     Minutes,
     Hours,
 }
 
-fn format_clock_value(total_ms: u32, min_clock_scale: Option<ClockScale>) -> String {
+pub fn format_clock_value(total_ms: u32, min_clock_scale: Option<ClockScale>) -> String {
     let min_clock_scale = min_clock_scale.unwrap_or(ClockScale::Minutes);
     let ms = total_ms % 1000;
     let s = total_ms / 1000;
@@ -40,7 +40,7 @@ fn format_clock_value(total_ms: u32, min_clock_scale: Option<ClockScale>) -> Str
     match min_clock_scale {
         ClockScale::Hours => format!("{}:{:02}:{:02}.{:02}", h, m % 60, s % 60, ms / 10),
         ClockScale::Minutes => format!("{}:{:02}.{:02}", m, s % 60, ms / 10),
-        ClockScale::Seconds => format!("{}.{:02}s", s, ms / 10),
+        ClockScale::Seconds => format!("{}.{:02}", s, ms / 10),
     }
 }
 

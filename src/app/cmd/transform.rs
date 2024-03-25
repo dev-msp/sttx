@@ -4,7 +4,7 @@ use clap::Args;
 
 use super::{
     input::{Input, ParseDuration},
-    output::{Output, OutputFormat},
+    output::{Format, Output},
 };
 use crate::transcribe::IterDyn;
 
@@ -34,11 +34,11 @@ impl Transform {
     pub fn process_to_output(&self, timings: IterDyn<'_>) -> Result<(), super::Error> {
         let mut s = self.output.sink()?;
         match self.output.format() {
-            OutputFormat::Csv => timings.write_csv(s)?,
-            OutputFormat::Json => timings.write_json(s)?,
-            OutputFormat::Pretty => {
+            Format::Csv => timings.write_csv(s)?,
+            Format::Json => timings.write_json(s)?,
+            Format::Pretty => {
                 for t in timings {
-                    writeln!(s, "{}\n", t)?;
+                    writeln!(s, "{t}\n")?;
                 }
             }
         };
@@ -77,7 +77,7 @@ pub struct TranscriptionPipeline {
 impl TranscriptionPipeline {
     pub fn process_iter<'a>(&self, mut it: IterDyn<'a>) -> IterDyn<'a> {
         if let Some(silence) = self.max_silence() {
-            it = it.max_silence(silence)
+            it = it.max_silence(silence);
         }
 
         if let Some(gap) = self.by_gap() {

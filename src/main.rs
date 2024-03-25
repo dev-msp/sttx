@@ -1,3 +1,4 @@
+#[deny(clippy::pedantic)]
 mod app;
 mod transcribe;
 mod vendor;

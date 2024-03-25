@@ -22,22 +22,22 @@ pub struct Input {
         default_value = "csv-fix",
         value_enum
     )]
-    format: InputFormat,
+    format: Format,
 
-    #[arg(value_parser = InputSource::parse)]
-    source: InputSource,
+    #[arg(value_parser = Source::parse)]
+    source: Source,
 }
 
 impl Input {
     pub fn source(&self) -> Result<Box<dyn std::io::Read>, std::io::Error> {
         let reader: Box<dyn std::io::Read> = match self.source {
-            InputSource::Stdin => Box::new(std::io::stdin()),
-            InputSource::File(ref path) => Box::new(std::fs::File::open(path)?),
+            Source::Stdin => Box::new(std::io::stdin()),
+            Source::File(ref path) => Box::new(std::fs::File::open(path)?),
         };
         Ok(reader)
     }
 
-    pub fn format(&self) -> &InputFormat {
+    pub fn format(&self) -> &Format {
         &self.format
     }
 }
@@ -48,18 +48,18 @@ pub enum CsvHandling {
 }
 
 #[derive(Debug, Clone)]
-pub enum InputFormat {
+pub enum Format {
     Csv(Option<CsvHandling>),
     Json,
 }
 
-impl Default for InputFormat {
+impl Default for Format {
     fn default() -> Self {
         Self::Csv(Some(CsvHandling::WhisperCppFix))
     }
 }
 
-impl ValueEnum for InputFormat {
+impl ValueEnum for Format {
     fn value_variants<'a>() -> &'a [Self] {
         &[
             Self::Csv(Some(CsvHandling::WhisperCppFix)),
@@ -70,16 +70,16 @@ impl ValueEnum for InputFormat {
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
-            InputFormat::Csv(Some(CsvHandling::WhisperCppFix)) => Some(
+            Format::Csv(Some(CsvHandling::WhisperCppFix)) => Some(
                 PossibleValue::new("csv-fix").help("same as csv, plus whisper.cpp formatting fix"),
             ),
-            InputFormat::Csv(None) => Some(PossibleValue::new("csv")),
-            InputFormat::Json => Some(PossibleValue::new("json")),
+            Format::Csv(None) => Some(PossibleValue::new("csv")),
+            Format::Json => Some(PossibleValue::new("json")),
         }
     }
 }
 
-impl InputFormat {
+impl Format {
     pub fn consume_reader<'a, R: std::io::Read + 'a>(&self, reader: R) -> IterDyn<'a> {
         match self {
             Self::Csv(handling) => {
@@ -106,12 +106,13 @@ impl InputFormat {
 }
 
 #[derive(Debug, Clone)]
-pub enum InputSource {
+pub enum Source {
     Stdin,
     File(String),
 }
 
-impl InputSource {
+impl Source {
+    #[allow(clippy::unnecessary_wraps)]
     fn parse(s: &str) -> Result<Self, String> {
         if s == "-" {
             Ok(Self::Stdin)
@@ -140,10 +141,10 @@ impl clap::builder::TypedValueParser for ParseDuration {
                 ContextKind::Custom,
                 ContextValue::String(
                     match attribution {
-                        Some(attribution) => format!("{}{}", msg, attribution),
+                        Some(attribution) => format!("{msg}{attribution}"),
                         None => msg.to_string(),
                     }
-                    .to_owned(),
+                    .clone(),
                 ),
             );
             e
@@ -158,7 +159,7 @@ impl clap::builder::TypedValueParser for ParseDuration {
 
         let digits = s
             .chars()
-            .take_while(|c| c.is_ascii_digit())
+            .take_while(char::is_ascii_digit)
             .collect::<String>();
 
         if digits.is_empty() {

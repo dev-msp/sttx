@@ -3,34 +3,34 @@ use clap::{builder::PossibleValue, Args, ValueEnum};
 #[derive(Args)]
 pub struct Output {
     #[arg(short = 'f', long = "format", default_value = "pretty", value_enum)]
-    format: OutputFormat,
+    format: Format,
 
     /// The path to which the program should write the output. Use `-` for stdout.
-    #[arg(short = 'o',  long = "output", default_value = "-", value_parser = OutputSink::parse)]
-    sink: OutputSink,
+    #[arg(short = 'o',  long = "output", default_value = "-", value_parser = Sink::parse)]
+    sink: Sink,
 }
 
 impl Output {
     pub fn sink(&self) -> Result<Box<dyn std::io::Write>, std::io::Error> {
         Ok(match self.sink {
-            OutputSink::Stdout => Box::new(std::io::stdout()),
-            OutputSink::File(ref path) => Box::new(std::fs::File::create(path)?),
+            Sink::Stdout => Box::new(std::io::stdout()),
+            Sink::File(ref path) => Box::new(std::fs::File::create(path)?),
         })
     }
 
-    pub fn format(&self) -> &OutputFormat {
+    pub fn format(&self) -> &Format {
         &self.format
     }
 }
 
 #[derive(Debug, Clone)]
-pub enum OutputFormat {
+pub enum Format {
     Csv,
     Json,
     Pretty,
 }
 
-impl ValueEnum for OutputFormat {
+impl ValueEnum for Format {
     fn value_variants<'a>() -> &'a [Self] {
         &[Self::Csv, Self::Json, Self::Pretty]
     }
@@ -45,12 +45,13 @@ impl ValueEnum for OutputFormat {
 }
 
 #[derive(Debug, Clone)]
-pub enum OutputSink {
+pub enum Sink {
     Stdout,
     File(String),
 }
 
-impl OutputSink {
+impl Sink {
+    #[allow(clippy::unnecessary_wraps)]
     fn parse(s: &str) -> Result<Self, String> {
         if s == "-" {
             Ok(Self::Stdout)

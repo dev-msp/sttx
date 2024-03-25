@@ -32,9 +32,9 @@ impl From<std::io::Error> for Error {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Csv(e) => write!(f, "CSV error: {}", e),
-            Self::Json(e) => write!(f, "JSON error: {}", e),
-            Self::Io(e) => write!(f, "I/O error: {}", e),
+            Self::Csv(e) => write!(f, "CSV error: {e}"),
+            Self::Json(e) => write!(f, "JSON error: {e}"),
+            Self::Io(e) => write!(f, "I/O error: {e}"),
         }
     }
 }
