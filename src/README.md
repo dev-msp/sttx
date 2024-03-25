@@ -24,7 +24,9 @@ context, one can transform timestamped STT data into more useful
 representations.
 
 At its core, it offers stackable strategies for reducing a sequence of
-timestamped speech events to a single event.
+timestamped speech events to a single event, taking advantage of the fact that
+these events (start/end timestamps and text content) are a semigroup (e.g.
+something that can be added to itself).
 
 The strategies include:
 
