@@ -2,7 +2,7 @@ use std::{io, time::Duration};
 
 use itertools::Itertools;
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct Timing {
     start: u32,
     end: u32,
@@ -19,6 +19,14 @@ impl std::fmt::Display for Timing {
             format_clock_value(self.duration(), Some(ClockScale::Seconds)),
             self.content()
         )
+    }
+}
+
+impl FromIterator<Timing> for Option<Timing> {
+    fn from_iter<I: IntoIterator<Item = Timing>>(iter: I) -> Self {
+        let mut iter = iter.into_iter();
+        let first = iter.next()?;
+        Some(iter.fold(first, |acc, t| acc.combine(&t)))
     }
 }
 
@@ -129,19 +137,8 @@ where
     I: Iterator<Item = Timing> + 'a,
 {
     pub fn sentences(self) -> IterDyn<'a> {
-        self.batching(move |it| {
-            let mut acc = it.next()?;
-
-            while !is_sentence(&acc.text) {
-                let Some(next) = it.next() else {
-                    return Some(acc);
-                };
-
-                acc = acc.combine(&next);
-            }
-            Some(acc)
-        })
-        .boxed()
+        self.batching(move |it| it.take_while_inclusive(|t| !is_sentence(&t.text)).collect())
+            .boxed()
     }
 
     pub fn max_silence(self, max_silence: Duration) -> IterDyn<'a> {
@@ -168,15 +165,8 @@ where
 
     pub fn min_word_count(self, min_words: usize) -> IterDyn<'a> {
         self.batching(move |it| {
-            let mut acc = it.next()?;
-            while acc.text.split_whitespace().count() < min_words {
-                let Some(next) = it.next() else {
-                    return Some(acc);
-                };
-
-                acc = acc.combine(&next);
-            }
-            Some(acc)
+            it.take_while_inclusive(|t| t.text.split_whitespace().count() < min_words)
+                .collect()
         })
         .boxed()
     }
@@ -215,18 +205,8 @@ where
     }
 
     pub fn chunks(self, chunk_count: usize) -> IterDyn<'a> {
-        self.batching(move |it| {
-            let mut acc = it.next()?;
-            for _ in 1..chunk_count {
-                let Some(next) = it.next() else {
-                    return Some(acc);
-                };
-
-                acc = acc.combine(&next);
-            }
-            Some(acc)
-        })
-        .boxed()
+        self.batching(move |it| it.take(chunk_count).collect())
+            .boxed()
     }
 
     pub fn write_csv<W: io::Write>(self, w: W) -> csv::Result<()> {
