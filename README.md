@@ -40,6 +40,7 @@ The strategies include:
 For example, if you have a sequence of events like this:
 
 ```csv
+start,end,text
 0,1000,Hel
 1000,1100,lo
 1100,2000, world
@@ -58,6 +59,7 @@ By default the program combines events without leading whitespace to the
 previous event. So with no arguments, the expected output would be:
 
 ```csv
+start,end,text
 0,1100,Hello
 1100,2000, world!
 2500,3000, How
@@ -72,6 +74,7 @@ previous event. So with no arguments, the expected output would be:
 With the `--sentences` flag, the output would be:
 
 ```csv
+start,end,text
 0,2000,Hello world!
 2500,5000, How are you?
 6300,7500," I'm fine, thanks!"
@@ -80,8 +83,40 @@ With the `--sentences` flag, the output would be:
 With the `--sentences --chunk-size 2` flag, the output would be:
 
 ```csv
+start,end,text
 0,5000,Hello world! How are you?
 6300,7500," I'm fine, thanks!"
+```
+
+Other output formats are supported:
+
+`--format json`:
+
+```json
+[
+  {
+    "start": 0,
+    "end": 5000,
+    "text": "Hello world! How are you?"
+  },
+  {
+    "start": 6300,
+    "end": 7500,
+    "text": " I'm fine, thanks!"
+  }
+]
+```
+
+`--format srt`:
+
+```srt
+0
+00:00:00,000 --> 00:00:05,000
+Hello world! How are you?
+
+1
+00:00:06,300 --> 00:00:07,500
+I'm fine, thanks!
 ```
 
 ## Usage
