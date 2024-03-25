@@ -41,7 +41,7 @@ For example, if you have a sequence of events like this:
 
 ```csv
 start,end,text
-0,1000,Hel
+0,1000, Hel
 1000,1100,lo
 1100,2000, world
 2000,2000,!
@@ -60,7 +60,7 @@ previous event. So with no arguments, the expected output would be:
 
 ```csv
 start,end,text
-0,1100,Hello
+0,1100, Hello
 1100,2000, world!
 2500,3000, How
 3100,3500, are
@@ -75,7 +75,7 @@ With the `--sentences` flag, the output would be:
 
 ```csv
 start,end,text
-0,2000,Hello world!
+0,2000, Hello world!
 2500,5000, How are you?
 6300,7500," I'm fine, thanks!"
 ```
@@ -84,7 +84,7 @@ With the `--sentences --chunk-size 2` flag, the output would be:
 
 ```csv
 start,end,text
-0,5000,Hello world! How are you?
+0,5000, Hello world! How are you?
 6300,7500," I'm fine, thanks!"
 ```
 
@@ -97,7 +97,7 @@ Other output formats are supported:
   {
     "start": 0,
     "end": 5000,
-    "text": "Hello world! How are you?"
+    "text": " Hello world! How are you?"
   },
   {
     "start": 6300,
