@@ -83,13 +83,12 @@ impl InputFormat {
     pub fn consume_reader<'a, R: std::io::Read + 'a>(&self, reader: R) -> IterDyn<'a> {
         match self {
             Self::Csv(handling) => {
-                let rdr: Box<dyn std::io::Read> = if let Some(CsvHandling::WhisperCppFix) = handling
-                {
-                    Box::new(BadCsvReader::new(reader))
-                } else {
-                    Box::new(reader)
-                };
-                let mut csv_reader = csv::Reader::from_reader(rdr);
+                let mut csv_reader: csv::Reader<Box<dyn std::io::Read>> =
+                    if let Some(CsvHandling::WhisperCppFix) = handling {
+                        BadCsvReader::new(reader).into_csv_reader()
+                    } else {
+                        csv::Reader::from_reader(Box::new(reader))
+                    };
 
                 csv_reader
                     .deserialize()

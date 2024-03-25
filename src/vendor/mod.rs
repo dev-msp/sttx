@@ -1,3 +1,4 @@
+/// Collection of vendor-specific utilities
 use std::collections::VecDeque;
 
 use std::io::{BufRead, BufReader, Read};
@@ -6,11 +7,17 @@ pub struct BadCsvReader<R> {
     inner: BufReader<R>,
 }
 
-impl<R: Read> BadCsvReader<R> {
+impl<'a, R: Read + 'a> BadCsvReader<R> {
     pub fn new(inner: R) -> Self {
         Self {
             inner: BufReader::new(inner),
         }
+    }
+
+    pub fn into_csv_reader(self) -> csv::Reader<Box<dyn Read + 'a>> {
+        csv::ReaderBuilder::new()
+            .escape(Some(b'\\'))
+            .from_reader(Box::new(self))
     }
 }
 
@@ -25,19 +32,14 @@ impl<R: Read> Read for BadCsvReader<R> {
         if n == 0 {
             return Ok(0);
         }
-        let comma_count = line.chars().filter(|&c| c == ',').count();
-        let mut line_to_write = if comma_count == 2 {
-            remove_bookending_quotes(&line)
-        } else {
-            line
-        };
-        line_to_write.push('\n');
+        let line_to_write = escape_nested_quotes(&line);
 
         let len = line_to_write.len();
         buf[..len].copy_from_slice(line_to_write.as_bytes());
         Ok(len)
     }
 }
+
 fn char_offsets(s: &str) -> impl Iterator<Item = (usize, char)> + '_ {
     s.chars().scan(0, |n, c| {
         let old_n = *n;
@@ -46,13 +48,17 @@ fn char_offsets(s: &str) -> impl Iterator<Item = (usize, char)> + '_ {
     })
 }
 
-fn remove_bookending_quotes(line: &str) -> String {
+fn escape_nested_quotes(line: &str) -> String {
     let offsets = {
         let mut bo = char_offsets(line)
             .filter_map(|(offset, c)| (c == '"').then_some(offset))
             .collect::<VecDeque<_>>();
 
-        bo.pop_front().zip(bo.pop_back())
+        if bo.len() != 2 {
+            bo.pop_front().zip(bo.pop_back())
+        } else {
+            None
+        }
     };
 
     let Some((left, right)) = offsets else {
@@ -60,9 +66,9 @@ fn remove_bookending_quotes(line: &str) -> String {
     };
 
     let mut new_line = String::new();
-    new_line.push_str(&line[..left]);
-    new_line.push_str(&line[left + 1..right]);
-    new_line.push_str(&line[right + 1..]);
+    new_line.push_str(&line[..left + 1]);
+    new_line.push_str(&line[left + 1..right].replace('"', "\\\""));
+    new_line.push_str(&line[right..]);
 
     new_line
 }
