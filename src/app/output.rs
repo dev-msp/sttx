@@ -27,18 +27,20 @@ impl Output {
 pub enum Format {
     Csv,
     Json,
+    Srt,
     Pretty,
 }
 
 impl ValueEnum for Format {
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::Csv, Self::Json, Self::Pretty]
+        &[Self::Csv, Self::Json, Self::Srt, Self::Pretty]
     }
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         match self {
             Self::Csv => Some(PossibleValue::new("csv")),
             Self::Json => Some(PossibleValue::new("json")),
+            Self::Srt => Some(PossibleValue::new("srt")),
             Self::Pretty => Some(PossibleValue::new("pretty")),
         }
     }

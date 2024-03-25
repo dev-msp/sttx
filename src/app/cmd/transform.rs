@@ -36,6 +36,7 @@ impl Transform {
         match self.output.format() {
             Format::Csv => timings.write_csv(s)?,
             Format::Json => timings.write_json(s)?,
+            Format::Srt => timings.write_srt(s)?,
             Format::Pretty => {
                 for t in timings {
                     writeln!(s, "{t}\n")?;
