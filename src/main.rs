@@ -8,22 +8,32 @@ use std::process;
 use app::App;
 use clap::Parser;
 
+enum ProgramOutcome {
+    Expected,
+    Unexpected(String),
+}
+
 fn main() {
     let app = App::parse();
 
-    match app.command() {
+    let outcome = match app.command() {
         app::cmd::Command::Transform(t) => {
             let timings = t.read_data().expect("failed to read timings");
             match t.process_to_output(timings) {
+                Ok(_) => ProgramOutcome::Expected,
                 Err(app::cmd::Error::Io(e)) if e.kind() == std::io::ErrorKind::BrokenPipe => {
-                    process::exit(0);
+                    ProgramOutcome::Expected
                 }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    process::exit(1);
-                }
-                _ => {}
+                Err(e) => ProgramOutcome::Unexpected(e.to_string()),
             }
+        }
+    };
+
+    match outcome {
+        ProgramOutcome::Expected => {}
+        ProgramOutcome::Unexpected(msg) => {
+            eprintln!("{}", msg);
+            process::exit(1);
         }
     }
 }
