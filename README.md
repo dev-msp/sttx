@@ -1,6 +1,6 @@
-# stt-swiss
+# sttx
 
-Utility belt for transforming speech-to-text data.
+Utility belt for transforming speech-to-text data. Pronounced "sticks".
 
 ## Use cases
 
@@ -19,7 +19,7 @@ The resolution of the data it gives you is controllable via the max length flag
 However, at best this only allows us to constrain the output by accumulating
 chunks of N words.
 
-`stt-swiss` stakes its utility on the notion that even with no other additional
+`sttx` stakes its utility on the notion that even with no other additional
 context, one can transform timestamped STT data into more useful
 representations.
 
@@ -122,7 +122,7 @@ I'm fine, thanks!
 ## Usage
 
 ```txt
-Usage: transcribe_slicer transform [OPTIONS] <SOURCE>
+Usage: sttx transform [OPTIONS] <SOURCE>
 
 Arguments:
   <SOURCE>

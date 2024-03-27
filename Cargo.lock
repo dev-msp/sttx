@@ -212,6 +212,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ee073c9e4cd00e28217186dbe12796d692868f432bf2e97ee73bed0c56dfa01"
 
 [[package]]
+name = "sttx"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "csv",
+ "itertools",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "syn"
 version = "2.0.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -220,17 +231,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "transcribe_slicer"
-version = "0.1.0"
-dependencies = [
- "clap",
- "csv",
- "itertools",
- "serde",
- "serde_json",
 ]
 
 [[package]]
