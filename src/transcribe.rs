@@ -80,15 +80,6 @@ fn format_clock_value(total_ms: u32, min_clock_scale: Option<ClockScale>) -> Str
     }
 }
 
-pub fn format_srt_value(total_ms: u32) -> String {
-    let ms = total_ms % 1000;
-    let s = total_ms / 1000;
-    let m = s / 60;
-    let h = m / 60;
-
-    format!("{:02}:{:02}:{:02},{:03}", h, m % 60, s % 60, ms)
-}
-
 impl Timing {
     #[allow(dead_code)]
     pub fn start(&self) -> u32 {
@@ -250,6 +241,15 @@ where
     }
 
     pub fn write_srt<W: io::Write>(self, mut w: W) -> io::Result<()> {
+        fn format_srt_value(total_ms: u32) -> String {
+            let ms = total_ms % 1000;
+            let s = total_ms / 1000;
+            let m = s / 60;
+            let h = m / 60;
+
+            format!("{:02}:{:02}:{:02},{:03}", h, m % 60, s % 60, ms)
+        }
+
         let mut i = 1;
         for t in self {
             writeln!(w, "{}", i)?;
