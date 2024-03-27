@@ -38,7 +38,35 @@ pub enum ClockScale {
     Hours,
 }
 
-pub fn format_clock_value(total_ms: u32, min_clock_scale: Option<ClockScale>) -> String {
+/// Formats a total number of milliseconds into a human-readable clock value.
+///
+/// ```
+/// use crate::transcribe::format_clock_value;
+/// use crate::transcribe::ClockScale::*;
+///
+/// // 10, 1000, 60000, 3600000
+///
+/// assert_eq!(format_clock_value(10,        None),           "0:00.01");
+/// assert_eq!(format_clock_value(10,        Some(Seconds)),     "0.01");
+/// assert_eq!(format_clock_value(10,        Some(Minutes)),  "0:00.01");
+/// assert_eq!(format_clock_value(10,        Some(Hours)), "0:00:00.01");
+///
+/// assert_eq!(format_clock_value(1000,      None),           "0:01.00");
+/// assert_eq!(format_clock_value(1000,      Some(Seconds)),     "1.00");
+/// assert_eq!(format_clock_value(1000,      Some(Minutes)),  "0:01.00");
+/// assert_eq!(format_clock_value(1000,      Some(Hours)), "0:00:01.00");
+///
+/// assert_eq!(format_clock_value(60e3,      None),           "1:00.00");
+/// assert_eq!(format_clock_value(60e3,      Some(Seconds)),    "60.00");
+/// assert_eq!(format_clock_value(60e3,      Some(Minutes)),  "1:00.00");
+/// assert_eq!(format_clock_value(60e3,      Some(Hours)), "0:01:00.00");
+///
+/// assert_eq!(format_clock_value(60 * 60e3, None),        "1:00:00.00");
+/// assert_eq!(format_clock_value(60 * 60e3, Some(Seconds)),  "3600.00");
+/// assert_eq!(format_clock_value(60 * 60e3, Some(Minutes)), "60:00.00");
+/// assert_eq!(format_clock_value(60 * 60e3, Some(Hours)), "1:00:00.00");
+/// ```
+fn format_clock_value(total_ms: u32, min_clock_scale: Option<ClockScale>) -> String {
     let min_clock_scale = min_clock_scale.unwrap_or(ClockScale::Minutes);
     let ms = total_ms % 1000;
     let s = total_ms / 1000;
