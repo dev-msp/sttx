@@ -2,6 +2,24 @@
 
 Utility belt for transforming speech-to-text data. Pronounced "sticks".
 
+## Install
+
+`cargo install sttx`
+
+## Usage
+
+```sh
+# Prepare original audio for transcription
+ffmpeg -i memo.mp3 -ac 1 -ar 16000 output.wav
+
+# Transcribe WAV audio with whisper.cpp
+# -ml (--max-length): The maximum number of tokens in each output segment
+# -sow (--split-on-word): Split the output on word boundaries
+whisper.cpp --model "$MODEL" -ml 1 -sow -ocsv output.wav
+
+sttx -s -g 500ms output.wav.csv
+```
+
 ## Use cases
 
 ### Working with `whisper.cpp` output
