@@ -1,9 +1,24 @@
 [package]
 name = "sttx"
+description = "Utility belt for transforming speech-to-text data"
+keywords = [
+  "stt",
+  "speech-to-text",
+  "timeseries",
+  "utility",
+  "whisper.cpp"
+]
+categories = [
+  "data-structures",
+  "text-processing",
+  "value-formatting",
+  "visualization"
+]
+readme = "README.md"
+repository = "https://github.com/dev-msp/sttx"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
 
 [dependencies]
 clap = { version = "4.5.3", features = ["derive"] }
