@@ -53,12 +53,13 @@ start,end,text
 5000,5000,?
 6300,6700, I'm
 6800,7200, fine
+7200,7200,","
 7300,7500, thanks
 7500,7500,!
 ```
 
-By default the program combines events without leading whitespace to the
-previous event. So with no arguments, the expected output would be:
+By default, `sttx` combines events without leading whitespace to the previous
+event. So with no arguments, the expected output would be:
 
 ```csv
 start,end,text
@@ -68,8 +69,7 @@ start,end,text
 3100,3500, are
 4100,5000, you?
 6300,6700, I'm
-6800,7200, fine
-7200,7200,","
+6800,7200," fine,"
 7300,7500, thanks!
 ```
 
