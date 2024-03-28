@@ -2,11 +2,30 @@ use std::{io, time::Duration};
 
 use itertools::Itertools;
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+/// The core datatype for input and output.
+///
+/// Timing is a monoid; it has a "zero" value and it has an associative binary operation
+/// (`Timing::combine()`).
+///
+/// sttx leans heavily on this fact for its functionality.
+///
+/// ```
+/// let zero = Timing::default();
+/// let timing = Timing::new(0, 1000, "Hello, world!".to_string());
+///
+/// assert_eq!(zero.combine(&timing), timing);
+/// ```
+#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
 pub struct Timing {
     start: u32,
     end: u32,
     text: String,
+}
+
+impl Timing {
+    pub fn new(start: u32, end: u32, text: String) -> Self {
+        Self { start, end, text }
+    }
 }
 
 impl std::fmt::Display for Timing {
@@ -22,6 +41,20 @@ impl std::fmt::Display for Timing {
     }
 }
 
+/// Iterators of Timing values may reduce to 0 or 1 Timing value.
+///
+/// ```
+/// let data = vec![
+///    Timing::new(0, 1000, "Hello".to_string()),
+///    Timing::new(1000, 1000, ",".to_string()),
+///    Timing::new(1000, 2000, " world".to_string()),
+///    Timing::new(2000, 2000, "!".to_string()),
+/// ];
+///
+/// let iter = data.into_iter();
+/// let timing: Option<Timing> = iter.collect();
+/// assert_eq!(timing.unwrap().content(), "Hello, world!");
+/// ```
 impl FromIterator<Timing> for Option<Timing> {
     fn from_iter<I: IntoIterator<Item = Timing>>(iter: I) -> Self {
         let mut iter = iter.into_iter();
