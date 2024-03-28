@@ -3,9 +3,12 @@ mod app;
 mod transcribe;
 mod vendor;
 
-use std::process;
+use std::{io, process};
 
-use app::App;
+use app::{
+    cmd::{Command, Error as AppError},
+    App,
+};
 use clap::Parser;
 
 enum ProgramOutcome {
@@ -17,11 +20,11 @@ fn main() {
     let app = App::parse();
 
     let outcome = match app.command() {
-        app::cmd::Command::Transform(t) => {
+        Command::Transform(t) => {
             let timings = t.read_data().expect("failed to read timings");
             match t.process_to_output(timings) {
                 Ok(_) => ProgramOutcome::Expected,
-                Err(app::cmd::Error::Io(e)) if e.kind() == std::io::ErrorKind::BrokenPipe => {
+                Err(AppError::Io(e)) if e.kind() == io::ErrorKind::BrokenPipe => {
                     ProgramOutcome::Expected
                 }
                 Err(e) => ProgramOutcome::Unexpected(e.to_string()),

@@ -142,14 +142,6 @@ where
 
 pub type IterDyn<'a> = Iter<Box<dyn Iterator<Item = Timing> + 'a>>;
 
-#[inline]
-fn is_sentence(s: &str) -> bool {
-    s.chars()
-        .enumerate()
-        .last()
-        .map_or(false, |(i, c)| i > 0 && matches!(c, '.' | '!' | '?'))
-}
-
 #[allow(dead_code)]
 impl<'a, I> Iter<I>
 where
@@ -233,7 +225,8 @@ where
         for t in self {
             wtr.serialize(t)?;
         }
-        Ok(wtr.flush()?)
+        wtr.flush()?;
+        Ok(())
     }
 
     pub fn write_json<W: io::Write>(self, w: W) -> serde_json::Result<()> {
@@ -305,3 +298,11 @@ where
 }
 
 impl<'a, I: Iterator<Item = Timing> + 'a> IteratorExt<'a> for I {}
+
+#[inline]
+fn is_sentence(s: &str) -> bool {
+    s.chars()
+        .enumerate()
+        .last()
+        .map_or(false, |(i, c)| i > 0 && matches!(c, '.' | '!' | '?'))
+}

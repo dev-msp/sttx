@@ -16,6 +16,8 @@ The resolution of the data it gives you is controllable via the max length flag
 (`-ml`). Note that the unit of length is tokens unless the split on word flag
 (`-sow`) is enabled.
 
+`whisper.cpp -i <input> -ml 1 -sow`
+
 However, at best this only allows us to constrain the output by accumulating
 chunks of N words.
 
@@ -80,7 +82,7 @@ start,end,text
 6300,7500," I'm fine, thanks!"
 ```
 
-With the `--sentences --chunk-size 2` flag, the output would be:
+And `--sentences --chunk-size 2` gives you:
 
 ```csv
 start,end,text
@@ -110,11 +112,11 @@ Other output formats are supported:
 `--format srt`:
 
 ```srt
-0
+1
 00:00:00,000 --> 00:00:05,000
 Hello world! How are you?
 
-1
+2
 00:00:06,300 --> 00:00:07,500
 I'm fine, thanks!
 ```
